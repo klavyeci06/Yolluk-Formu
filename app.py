@@ -143,7 +143,6 @@ with st.form("personel_formu"):
         g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
         g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
         g_u2_v = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="g3")
-        st.info("💡 Uçak biletinizi mail gönderirken eklemeyi unutmayınız.")
     else:
         g_u1_v = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="go1")
         g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
@@ -155,7 +154,6 @@ with st.form("personel_formu"):
         d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
         d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
         d_u2_v = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, key="d3")
-        st.info("💡 Uçak biletinizi mail gönderirken eklemeyi unutmayınız.")
     else:
         d_u1_v = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="do1")
         d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
@@ -175,15 +173,28 @@ if submit_button:
     elif tc_hata or tel_hata or iban_hata:
         st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
     else:
+        # Tarih Formatlama (Gün.Ay.Yıl)
+        f_giris = giris_tarihi.strftime("%d.%m.%Y")
+        f_cikis = cikis_tarihi.strftime("%d.%m.%Y")
+        
         # Mail İçeriği Hazırlama
         konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
+        
+        # Vurgu Stilleri: Kalın (**), İtalik (_), Altı Çizili (HTML <u> etiketi bazı istemcilerde çalışır)
+        # Mail programları için en garanti "kalın-italik" stilini uyguladım
         govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
                 f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
                 f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
                 f"Telefon: {telefon}\nIBAN: TR{iban_govde}\n\n" \
-                f"KONAKLAMA:\n- Giriş: {giris_tarihi}\n- Çıkış: {cikis_tarihi}\n\n" \
-                f"GİDİŞ ({vasita_gidis}):\n- Şehir içi 1: {g_u1_v} TL\n- Bilet: {g_b_v} TL\n- Şehir içi 2: {g_u2_v} TL\n\n" \
-                f"DÖNÜŞ ({vasita_donus}):\n- Şehir içi 1: {d_u1_v} TL\n- Bilet: {d_b_v} TL\n- Şehir içi 2: {d_u2_v} TL\n\n" \
+                f"KONAKLAMA:\n- Giriş: {f_giris}\n- Çıkış: {f_cikis}\n\n" \
+                f"GİDİŞ ({vasita_gidis}):\n" \
+                f"- ***Şehir içi 1:*** {g_u1_v} TL\n" \
+                f"- Bilet: {g_b_v} TL\n" \
+                f"- ***Şehir içi 2:*** {g_u2_v} TL\n\n" \
+                f"DÖNÜŞ ({vasita_donus}):\n" \
+                f"- ***Şehir içi 1:*** {d_u1_v} TL\n" \
+                f"- Bilet: {d_b_v} TL\n" \
+                f"- ***Şehir içi 2:*** {d_u2_v} TL\n\n" \
                 f"Notlar: {notlar}"
         
         safe_subject = urllib.parse.quote(konu)
@@ -191,7 +202,7 @@ if submit_button:
         benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
         mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
         
-        st.success("✅ Bilgileriniz Hazırlandı!")
+        st.success("✅ Bilgileriniz istediğiniz düzende hazırlandı!")
         st.balloons()
 
         # KIRMIZI BUTON
@@ -204,6 +215,6 @@ if submit_button:
             """, unsafe_allow_html=True)
 
         # YEDEK ALAN
-        with st.expander("Mail programı otomatik açılmazsa buraya tıklayın:"):
-            st.text_area("Kopyalanacak Metin:", value=govde, height=300)
-            st.write(f"Gönderilecek Adres: **{benim_mail}**")
+        with st.expander("Görünümü kontrol etmek veya manuel kopyalamak için tıklayın:"):
+            st.text_area("Mail İçeriği Önizleme:", value=govde, height=350)
+            st.write(f"Alıcı: **{benim_mail}**")
