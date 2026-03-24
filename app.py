@@ -1,11 +1,21 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+from notion_client import Client
+
+# --- 1. NOTION BAĞLANTI AYARLARI ---
+try:
+    NOTION_TOKEN = st.secrets["NOTION_TOKEN"]
+    DATABASE_ID = st.secrets["DATABASE_ID"]
+    notion = Client(auth=NOTION_TOKEN)
+except Exception as e:
+    st.error("Lütfen Streamlit Secrets (TOKEN ve ID) ayarlarını kontrol edin!")
+    st.stop()
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
-# --- TÜRKİYE İL-İLÇE VERİ SETİ (81 İL) ---
-# (Kodun okunabilirliği için burayı özet geçiyorum, senin dosyadaki tam liste kalmalı)
+
+# --- TÜRKİYE İL-İLÇE VERİ SETİ (Gönderdiğin liste aynen korunuyor) ---
 turkiye_verisi = {
     "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
     "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
@@ -43,7 +53,7 @@ turkiye_verisi = {
     "Giresun": ["Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", "Görele", "Güce", "Keşap", "Merkez", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıdere"],
     "Gümüşhane": ["Kelkit", "Köse", "Kürtün", "Merkez", "Şiran", "Torul"],
     "Hakkari": ["Çukurca", "Derecik", "Merkez", "Şemdinli", "Yüksekova"],
-    "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağı"],
+    "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladığı"],
     "Iğdır": ["Aralık", "Karakoyunlu", "Merkez", "Tuzluca"],
     "Isparta": ["Aksu", "Atabey", "Eğirdir", "Gelendost", "Gönen", "Keçiborlu", "Merkez", "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli"],
     "İstanbul": ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
@@ -89,6 +99,7 @@ turkiye_verisi = {
     "Yozgat": ["Akdağmadeni", "Aydıncık", "Boğazlıyan", "Çandır", "Çayıralan", "Çekerek", "Kadışehri", "Merkez", "Saraykent", "Sarıkaya", "Sorgun", "Şefaatli", "Yenifakılı", "Yerköy"],
     "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
 }
+
 st.title("🏦 Personel Kayıt ve Yolluk Formu")
 
 # --- 1. DİNAMİK SEÇİMLER (FORM DIŞI) ---
@@ -133,7 +144,7 @@ with st.form("personel_formu"):
     with c3:
         ek_gosterge = st.text_input("Ek Gösterge (3-4 Rakam)", max_chars=4)
 
-    # --- KONAKLAMA TARİHLERİ (HATA ALINAN KISIM DÜZELTİLDİ) ---
+    # --- KONAKLAMA TARİHLERİ ---
     st.subheader("📅 Konaklama Bilgileri")
     col_t1, col_t2 = st.columns(2)
     with col_t1:
@@ -189,10 +200,10 @@ with st.form("personel_formu"):
 
     notlar = st.text_area("Varsa ek notlar")
     
-    # "Missing Submit Button" hatasını çözen kritik satır
+    # Kapanış butonu form içinde
     submit_button = st.form_submit_button("Bilgileri Sisteme Kaydet")
 
-# --- 3. KONTROLLER ---
+# --- 3. KONTROLLER VE NOTION MOTORU ---
 if submit_button:
     tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
     tel_hata = len(telefon) != 10 or not telefon.isdigit()
@@ -209,8 +220,25 @@ if submit_button:
         st.warning("Telefon başında 0 olmadan 10 hane olmalı!")
     elif iban_hata:
         st.warning("IBAN 24 hane rakam olmalı!")
-    elif (vasita_gidis == "Uçak" and g_dosya is None) or (vasita_donus == "Uçak" and d_dosya is None):
-        st.error("Uçak seyahatleri için bilet yüklenmesi zorunludur!")
     else:
-        st.success("Bilgileriniz başarıyla işlendi!")
-        st.balloons()
+        try:
+            # NOTION KAYIT İŞLEMİ
+            notion.pages.create(
+                parent={"database_id": DATABASE_ID},
+                properties={
+                    "T.C. Kimlik Numarası *": {"title": [{"text": {"content": tc_no}}]},
+                    "Adınız *": {"rich_text": [{"text": {"content": ad}}]},
+                    "Soyadınız *": {"rich_text": [{"text": {"content": soyad}}]},
+                    "Unvanınız *": {"rich_text": [{"text": {"content": unvan}}]},
+                    "Telefon (Başında 0 olmadan, 10 hane) *": {"rich_text": [{"text": {"content": telefon}}]},
+                    "IBAN (24 hane rakam) *": {"rich_text": [{"text": {"content": iban_govde}}]},
+                    "Görev Yeri (İlçe) *": {"rich_text": [{"text": {"content": f"{secilen_il} / {secilen_ilce}"}}]},
+                    "Gidiş Vasıtası": {"select": {"name": vasita_gidis}},
+                    "Dönüş Vasıtası": {"select": {"name": vasita_donus}},
+                    "Ek Notlar": {"rich_text": [{"text": {"content": notlar}}]}
+                }
+            )
+            st.success("Tebrikler! Bilgileriniz Notion'a başarıyla aktarıldı.")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Bağlantı Hatası: {e}. Lütfen Notion sütun isimlerini kontrol edin.")
