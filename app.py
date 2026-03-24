@@ -205,5 +205,29 @@ if submit_button:
         mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
         
         st.success("Bilgileriniz hazırlandı! Lütfen açılan mail sayfasında 'Gönder'e basarak (varsa uçak biletlerinizi ekleyerek) işlemi tamamlayınız.")
-        webbrowser.open(mailto_link)
+        
+        # --- EKLEME: KIRMIZI BUTON VE KOPYALAMA ALANI ---
         st.balloons()
+
+        # 1. YÖNTEM: GÖSTERİŞLİ MAİL GÖNDER BUTONU
+        st.markdown(f"""
+            <a href="{mailto_link}" target="_blank" style="text-decoration: none;">
+                <div style="
+                    text-align: center;
+                    background-color: #ff4b4b;
+                    color: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                    font-size: 18px;
+                    margin: 20px 0;">
+                    📧 BURAYA TIKLAYARAK MAİLİ GÖNDERİNİZ
+                </div>
+            </a>
+            """, unsafe_allow_html=True)
+
+        # 2. YÖNTEM: YEDEK KOPYALAMA ALANI
+        with st.expander("Mail programı açılmazsa buraya tıklayın:"):
+            st.info("Eğer yukarıdaki buton çalışmazsa, aşağıdaki metni kopyalayıp manuel olarak mail atabilirsiniz.")
+            st.text_area("Kopyalanacak Metin:", value=govde, height=250)
+            st.write(f"Gönderilecek Adres: **{benim_mail}**")
