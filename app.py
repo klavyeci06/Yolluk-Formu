@@ -1,6 +1,10 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
+from notion_client import Client
+
+# Notion bağlantısını kuran kısım (En başta durmalı)
+NOTION_TOKEN = st.secrets["NOTION_TOKEN"]
+DATABASE_ID = st.secrets["DATABASE_ID"]
+notion = Client(auth=NOTION_TOKEN)
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
