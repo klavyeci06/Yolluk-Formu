@@ -1,21 +1,13 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from notion_client import Client
-
-# --- 1. NOTION BAĞLANTI AYARLARI ---
-try:
-    NOTION_TOKEN = st.secrets["NOTION_TOKEN"]
-    DATABASE_ID = st.secrets["DATABASE_ID"]
-    notion = Client(auth=NOTION_TOKEN)
-except Exception as e:
-    st.error("Lütfen Streamlit Secrets (TOKEN ve ID) ayarlarını kontrol edin!")
-    st.stop()
+import webbrowser
+import urllib.parse
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
-
-# --- TÜRKİYE İL-İLÇE VERİ SETİ (Gönderdiğin liste aynen korunuyor) ---
+# --- TÜRKİYE İL-İLÇE VERİ SETİ (81 İL) ---
+# (Kodun okunabilirliği için burayı özet geçiyorum, senin dosyadaki tam liste kalmalı)
 turkiye_verisi = {
     "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
     "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
@@ -53,7 +45,7 @@ turkiye_verisi = {
     "Giresun": ["Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", "Görele", "Güce", "Keşap", "Merkez", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıdere"],
     "Gümüşhane": ["Kelkit", "Köse", "Kürtün", "Merkez", "Şiran", "Torul"],
     "Hakkari": ["Çukurca", "Derecik", "Merkez", "Şemdinli", "Yüksekova"],
-    "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladığı"],
+    "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağı"],
     "Iğdır": ["Aralık", "Karakoyunlu", "Merkez", "Tuzluca"],
     "Isparta": ["Aksu", "Atabey", "Eğirdir", "Gelendost", "Gönen", "Keçiborlu", "Merkez", "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli"],
     "İstanbul": ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
@@ -99,10 +91,9 @@ turkiye_verisi = {
     "Yozgat": ["Akdağmadeni", "Aydıncık", "Boğazlıyan", "Çandır", "Çayıralan", "Çekerek", "Kadışehri", "Merkez", "Saraykent", "Sarıkaya", "Sorgun", "Şefaatli", "Yenifakılı", "Yerköy"],
     "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
 }
-
 st.title("🏦 Personel Kayıt ve Yolluk Formu")
 
-# --- 1. DİNAMİK SEÇİMLER (FORM DIŞI) ---
+# --- 1. DİNAMİK SEÇİMLER ---
 col_loc1, col_loc2 = st.columns(2)
 with col_loc1:
     iller = sorted(list(turkiye_verisi.keys()))
@@ -120,125 +111,99 @@ with col_v2:
     vasita_donus = st.radio("Dönüş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_donus")
 st.markdown("---")
 
-# --- 2. ANA FORM BAŞLIYOR ---
+# --- 2. ANA FORM ---
 with st.form("personel_formu"):
-    
-    # TC Kimlik Numarası
     tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11, placeholder="11 haneli rakam")
-
-    # Kimlik Bilgileri
+    
     col_ad, col_soyad = st.columns(2)
-    with col_ad:
-        ad = st.text_input("Adınız *")
-    with col_soyad:
-        soyad = st.text_input("Soyadınız *")
+    with col_ad: ad = st.text_input("Adınız *")
+    with col_soyad: soyad = st.text_input("Soyadınız *")
     
     unvan = st.text_input("Unvanınız *")
     
-    # Derece / Kademe / Ek Gösterge
     c1, c2, c3 = st.columns(3)
-    with c1:
-        derece = st.text_input("Derece (Maks 2)", max_chars=2)
-    with c2:
-        kademe = st.text_input("Kademe (Maks 1)", max_chars=1)
-    with c3:
-        ek_gosterge = st.text_input("Ek Gösterge (3-4 Rakam)", max_chars=4)
+    with c1: derece = st.text_input("Derece", max_chars=2)
+    with c2: kademe = st.text_input("Kademe", max_chars=1)
+    with c3: ek_gosterge = st.text_input("Ek Gösterge", max_chars=4)
 
-    # --- KONAKLAMA TARİHLERİ ---
     st.subheader("📅 Konaklama Bilgileri")
     col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        giris_tarihi = st.date_input("Akademi Sosyal Tesislerine Giriş Tarihi", value=datetime.now())
-    with col_t2:
-        cikis_tarihi = st.date_input("Akademi Sosyal Tesislerinden Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
+    with col_t1: giris_tarihi = st.date_input("Giriş Tarihi", value=datetime.now())
+    with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
     
-    # Telefon ve IBAN
-    telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
-    
-    st.write("Maaş Aldığınız Banka IBAN No")
+    telefon = st.text_input("Telefon (10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
+    st.write("IBAN No")
     c_tr, c_iban = st.columns([1, 8])
-    with c_tr:
-        st.code("TR", language="text")
-    with c_iban:
-        iban_govde = st.text_input("IBAN (24 hane rakam) *", max_chars=24)
+    with c_tr: st.code("TR", language="text")
+    with c_iban: iban_govde = st.text_input("IBAN (24 hane) *", max_chars=24)
 
     # --- GİDİŞ HARCAMALARI ---
     st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
     if vasita_gidis == "Uçak":
         g_u1, g_u2 = st.columns(2)
         with g_u1:
-            g_yer_hava = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, step=0.1, key="g1")
-            g_bilet = st.number_input("Gidiş Uçak Bileti Tutarı (TL) *", min_value=0.0, step=0.01, key="g2")
+            g_u1_v = st.number_input("Görev Yeri - Havaalanı (TL)", min_value=0.0, key="g1")
+            g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
         with g_u2:
-            g_hava_seminer = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, step=0.1, key="g3")
-            g_dosya = st.file_uploader("Gidiş Bileti Yükle *", type=['pdf', 'jpg', 'png'], key="g_file")
+            g_u2_v = st.number_input("Havaalanı - Seminer Yeri (TL)", min_value=0.0, key="g3")
+            st.info("💡 Uçak biletinizi kayıt sonrası açılacak mail sayfasında eklemeyi unutmayınız.")
     else:
         c_go1, c_go2 = st.columns(2)
         with c_go1:
-            g_yer_term = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, step=0.1, key="go1")
-            g_bilet_o = st.number_input("Gidiş Otobüs Bileti Tutarı (TL) *", min_value=0.0, step=0.01, key="go2")
+            g_u1_v = st.number_input("Görev Yeri - Terminal (TL)", min_value=0.0, key="go1")
+            g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
         with c_go2:
-            g_term_seminer = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, step=0.1, key="go3")
+            g_u2_v = st.number_input("Terminal - Seminer Yeri (TL)", min_value=0.0, key="go3")
 
     # --- DÖNÜŞ HARCAMALARI ---
     st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
     if vasita_donus == "Uçak":
         d_u1, d_u2 = st.columns(2)
         with d_u1:
-            d_seminer_hava = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, step=0.1, key="d1")
-            d_bilet = st.number_input("Dönüş Uçak Bileti Tutarı (TL) *", min_value=0.0, step=0.01, key="d2")
+            d_u1_v = st.number_input("Seminer Yeri - Havaalanı (TL)", min_value=0.0, key="d1")
+            d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
         with d_u2:
-            d_hava_gorev = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, step=0.1, key="d3")
-            d_dosya = st.file_uploader("Dönüş Bileti Yükle *", type=['pdf', 'jpg', 'png'], key="d_file")
+            d_u2_v = st.number_input("Havaalanı - Görev Yeri (TL)", min_value=0.0, key="d3")
+            st.info("💡 Uçak biletinizi kayıt sonrası açılacak mail sayfasında eklemeyi unutmayınız.")
     else:
         c_do1, c_do2 = st.columns(2)
         with c_do1:
-            d_seminer_term = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, step=0.1, key="do1")
-            d_bilet_o = st.number_input("Dönüş Otobüs Bileti Tutarı (TL) *", min_value=0.0, step=0.01, key="do2")
+            d_u1_v = st.number_input("Seminer Yeri - Terminal (TL)", min_value=0.0, key="do1")
+            d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
         with c_do2:
-            d_term_gorev = st.number_input("Terminal - Görev Yeri Ulaşım (TL)", min_value=0.0, step=0.1, key="do3")
+            d_u2_v = st.number_input("Terminal - Görev Yeri (TL)", min_value=0.0, key="do3")
 
-    notlar = st.text_area("Varsa ek notlar")
-    
-    # Kapanış butonu form içinde
-    submit_button = st.form_submit_button("Bilgileri Sisteme Kaydet")
+    notlar = st.text_area("Ek Notlar")
+    submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
 
-# --- 3. KONTROLLER VE NOTION MOTORU ---
+# --- 3. KONTROLLER VE MAIL TETİKLEME ---
 if submit_button:
     tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
     tel_hata = len(telefon) != 10 or not telefon.isdigit()
     iban_hata = len(iban_govde) != 24 or not iban_govde.isdigit()
-    tarih_hata = giris_tarihi >= cikis_tarihi
     
     if not (tc_no and ad and soyad and unvan and telefon and iban_govde):
         st.error("Lütfen tüm zorunlu alanları doldurunuz!")
-    elif tc_hata:
-        st.warning("T.C. Kimlik Numarası 11 haneli rakam olmalıdır!")
-    elif tarih_hata:
-        st.error("Çıkış tarihi, giriş tarihinden önce veya aynı gün olamaz!")
-    elif tel_hata:
-        st.warning("Telefon başında 0 olmadan 10 hane olmalı!")
-    elif iban_hata:
-        st.warning("IBAN 24 hane rakam olmalı!")
+    elif tc_hata or tel_hata or iban_hata:
+        st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
     else:
-        try:
-            # NOTION KAYIT İŞLEMİ
-            notion.pages.create(
-                parent={"database_id": DATABASE_ID},
-                properties={
-                    "T.C. Kimlik Numarası *": {"title": [{"text": {"content": tc_no}}]},
-                    "Adınız *": {"rich_text": [{"text": {"content": ad}}]},
-                    "Soyadınız *": {"rich_text": [{"text": {"content": soyad}}]},
-                    "Unvanınız *": {"rich_text": [{"text": {"content": unvan}}]},
-                    "Telefon (Başında 0 olmadan, 10 hane) *": {"rich_text": [{"text": {"content": telefon}}]},
-                    "IBAN (24 hane rakam) *": {"rich_text": [{"text": {"content": iban_govde}}]},
-                    "Görev Yeri (İlçe) *": {"rich_text": [{"text": {"content": f"{secilen_il} / {secilen_ilce}"}}]},
-                    "Gidiş Vasıtası": {"select": {"name": vasita_gidis}},
-                    "Dönüş Vasıtası": {"select": {"name": vasita_donus}},
-                    "Ek Notlar": {"rich_text": [{"text": {"content": notlar}}]}
-                }
-            )
-            st.success("Tebrikler! Bilgileriniz Notion'a başarıyla aktarıldı.")
-            st.balloons()
-        except Exception as e:
-            st.error(f"Bağlantı Hatası: {e}. Lütfen Notion sütun isimlerini kontrol edin.")
+        # Mail İçeriği (Türkçe karakter ve satır boşlukları için encode edildi)
+        konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
+        govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
+                f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
+                f"Derece/Kademe: {derece}/{kademe}\nIBAN: TR{iban_govde}\n\n" \
+                f"GİDİŞ ({vasita_gidis}):\n- Şehir içi 1: {g_u1_v} TL\n- Bilet: {g_b_v} TL\n- Şehir içi 2: {g_u2_v} TL\n\n" \
+                f"DÖNÜŞ ({vasita_donus}):\n- Şehir içi 1: {d_u1_v} TL\n- Bilet: {d_b_v} TL\n- Şehir içi 2: {d_u2_v} TL\n\n" \
+                f"Notlar: {notlar}"
+        
+        # URL'yi mail linki için güvenli hale getir
+        safe_subject = urllib.parse.quote(konu)
+        safe_body = urllib.parse.quote(govde)
+        
+        # Kendi mail adresini aşağıya yaz!
+        benim_mail = "abdurrahim.kaya1@gmail.com" 
+        mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
+        
+        st.success("Bilgileriniz hazırlandı! Lütfen açılan mail sayfasında 'Gönder'e basarak (varsa uçak biletlerinizi ekleyerek) işlemi tamamlayınız.")
+        webbrowser.open(mailto_link)
+        st.balloons()
