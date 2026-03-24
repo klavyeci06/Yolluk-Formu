@@ -12,9 +12,9 @@ try:
 except:
     st.error("Lütfen Secrets ayarlarını yapın!")
     st.stop()
-# --- TÜRKİYE İL-İLÇE VERİ SETİ (81 İL) ---
-# (Kodun okunabilirliği için burayı özet geçiyorum, senin dosyadaki tam liste kalmalı)
-turkiye_verisi = {
+
+# --- İL VE İLÇE VERİSİ (Örnektir, ihtiyacına göre genişletebilirsin) ---
+sehirler = {
     "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
     "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
     "Afyonkarahisar": ["Başmakçı", "Bayat", "Bolvadin", "Çay", "Çobanlar", "Dazkırı", "Dinar", "Emirdağ", "Evciler", "Hocalar", "İhsaniye", "İscehisar", "Kızılören", "Merkez", "Sandıklı", "Sinanpaşa", "Sultandağı", "Şuhut"],
@@ -97,6 +97,7 @@ turkiye_verisi = {
     "Yozgat": ["Akdağmadeni", "Aydıncık", "Boğazlıyan", "Çandır", "Çayıralan", "Çekerek", "Kadışehri", "Merkez", "Saraykent", "Sarıkaya", "Sorgun", "Şefaatli", "Yenifakılı", "Yerköy"],
     "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
 }
+
 st.title("📄 Personel Kayıt ve Yolluk Formu")
 
 with st.form("akilli_form", clear_on_submit=True):
