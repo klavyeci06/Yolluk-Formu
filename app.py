@@ -128,55 +128,43 @@ with st.form("personel_formu"):
 
     st.subheader("📅 Konaklama Bilgileri")
     col_t1, col_t2 = st.columns(2)
-    with col_t1: giris_tarihi = st.date_input("Giriş Tarihi", value=datetime.now())
-    with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
+    with col_t1: giris_tarihi = st.date_input("Sosyal Tesise Giriş Tarihi", value=datetime.now())
+    with col_t2: cikis_tarihi = st.date_input("Sosyal Tesisten Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
     
-    telefon = st.text_input("Telefon (10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
-    st.write("IBAN No")
+    telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
+    st.write("Maaş Aldığınız Banka IBAN No")
     c_tr, c_iban = st.columns([1, 8])
     with c_tr: st.code("TR", language="text")
-    with c_iban: iban_govde = st.text_input("IBAN (24 hane) *", max_chars=24)
+    with c_iban: iban_govde = st.text_input("IBAN (24 hane rakam) *", max_chars=24)
 
     # --- GİDİŞ HARCAMALARI ---
     st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
     if vasita_gidis == "Uçak":
-        g_u1, g_u2 = st.columns(2)
-        with g_u1:
-            g_u1_v = st.number_input("Görev Yeri - Havaalanı (TL)", min_value=0.0, key="g1")
-            g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
-        with g_u2:
-            g_u2_v = st.number_input("Havaalanı - Seminer Yeri (TL)", min_value=0.0, key="g3")
-            st.info("💡 Uçak biletinizi kayıt sonrası açılacak mail sayfasında eklemeyi unutmayınız.")
+        g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
+        g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
+        g_u2_v = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="g3")
+        st.info("💡 Uçak biletinizi mail gönderirken eklemeyi unutmayınız.")
     else:
-        c_go1, c_go2 = st.columns(2)
-        with c_go1:
-            g_u1_v = st.number_input("Görev Yeri - Terminal (TL)", min_value=0.0, key="go1")
-            g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
-        with c_go2:
-            g_u2_v = st.number_input("Terminal - Seminer Yeri (TL)", min_value=0.0, key="go3")
+        g_u1_v = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="go1")
+        g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
+        g_u2_v = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="go3")
 
     # --- DÖNÜŞ HARCAMALARI ---
     st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
     if vasita_donus == "Uçak":
-        d_u1, d_u2 = st.columns(2)
-        with d_u1:
-            d_u1_v = st.number_input("Seminer Yeri - Havaalanı (TL)", min_value=0.0, key="d1")
-            d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
-        with d_u2:
-            d_u2_v = st.number_input("Havaalanı - Görev Yeri (TL)", min_value=0.0, key="d3")
-            st.info("💡 Uçak biletinizi kayıt sonrası açılacak mail sayfasında eklemeyi unutmayınız.")
+        d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
+        d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
+        d_u2_v = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, key="d3")
+        st.info("💡 Uçak biletinizi mail gönderirken eklemeyi unutmayınız.")
     else:
-        c_do1, c_do2 = st.columns(2)
-        with c_do1:
-            d_u1_v = st.number_input("Seminer Yeri - Terminal (TL)", min_value=0.0, key="do1")
-            d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
-        with c_do2:
-            d_u2_v = st.number_input("Terminal - Görev Yeri (TL)", min_value=0.0, key="do3")
+        d_u1_v = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="do1")
+        d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
+        d_u2_v = st.number_input("Terminal - Görev Yeri Ulaşım (TL)", min_value=0.0, key="do3")
 
-    notlar = st.text_area("Ek Notlar")
+    notlar = st.text_area("Varsa ek notlar")
     submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
 
-# --- 3. KONTROLLER VE MAIL TETİKLEME ---
+# --- 3. KONTROLLER VE MAIL ---
 if submit_button:
     tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
     tel_hata = len(telefon) != 10 or not telefon.isdigit()
@@ -187,47 +175,35 @@ if submit_button:
     elif tc_hata or tel_hata or iban_hata:
         st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
     else:
-        # Mail İçeriği (Türkçe karakter ve satır boşlukları için encode edildi)
+        # Mail İçeriği Hazırlama
         konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
         govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
                 f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
-                f"Derece/Kademe: {derece}/{kademe}\nIBAN: TR{iban_govde}\n\n" \
+                f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
+                f"Telefon: {telefon}\nIBAN: TR{iban_govde}\n\n" \
+                f"KONAKLAMA:\n- Giriş: {giris_tarihi}\n- Çıkış: {cikis_tarihi}\n\n" \
                 f"GİDİŞ ({vasita_gidis}):\n- Şehir içi 1: {g_u1_v} TL\n- Bilet: {g_b_v} TL\n- Şehir içi 2: {g_u2_v} TL\n\n" \
                 f"DÖNÜŞ ({vasita_donus}):\n- Şehir içi 1: {d_u1_v} TL\n- Bilet: {d_b_v} TL\n- Şehir içi 2: {d_u2_v} TL\n\n" \
                 f"Notlar: {notlar}"
         
-        # URL'yi mail linki için güvenli hale getir
         safe_subject = urllib.parse.quote(konu)
         safe_body = urllib.parse.quote(govde)
-        
-        # Kendi mail adresini aşağıya yaz!
         benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
         mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
         
-        st.success("Bilgileriniz hazırlandı! Lütfen açılan mail sayfasında 'Gönder'e basarak (varsa uçak biletlerinizi ekleyerek) işlemi tamamlayınız.")
-        
-        # --- EKLEME: KIRMIZI BUTON VE KOPYALAMA ALANI ---
+        st.success("✅ Bilgileriniz Hazırlandı!")
         st.balloons()
 
-        # 1. YÖNTEM: GÖSTERİŞLİ MAİL GÖNDER BUTONU
+        # KIRMIZI BUTON
         st.markdown(f"""
             <a href="{mailto_link}" target="_blank" style="text-decoration: none;">
-                <div style="
-                    text-align: center;
-                    background-color: #ff4b4b;
-                    color: white;
-                    padding: 15px;
-                    border-radius: 10px;
-                    font-weight: bold;
-                    font-size: 18px;
-                    margin: 20px 0;">
-                    📧 BURAYA TIKLAYARAK MAİLİ GÖNDERİNİZ
+                <div style="text-align: center; background-color: #ff4b4b; color: white; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 18px; margin: 20px 0;">
+                    📧 MAİLİ OLUŞTUR VE GÖNDER
                 </div>
             </a>
             """, unsafe_allow_html=True)
 
-        # 2. YÖNTEM: YEDEK KOPYALAMA ALANI
-        with st.expander("Mail programı açılmazsa buraya tıklayın:"):
-            st.info("Eğer yukarıdaki buton çalışmazsa, aşağıdaki metni kopyalayıp manuel olarak mail atabilirsiniz.")
-            st.text_area("Kopyalanacak Metin:", value=govde, height=250)
+        # YEDEK ALAN
+        with st.expander("Mail programı otomatik açılmazsa buraya tıklayın:"):
+            st.text_area("Kopyalanacak Metin:", value=govde, height=300)
             st.write(f"Gönderilecek Adres: **{benim_mail}**")
