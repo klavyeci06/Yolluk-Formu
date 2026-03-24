@@ -1,7 +1,7 @@
 import streamlit as st
 from notion_client import Client
 
-# Notion bağlantısını kuran kısım (En başta durmalı)
+# Notion bağlantısını kuran kısım
 NOTION_TOKEN = st.secrets["NOTION_TOKEN"]
 DATABASE_ID = st.secrets["DATABASE_ID"]
 notion = Client(auth=NOTION_TOKEN)
