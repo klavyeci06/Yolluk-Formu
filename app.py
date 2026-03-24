@@ -201,7 +201,7 @@ if submit_button:
         safe_body = urllib.parse.quote(govde)
         
         # Kendi mail adresini aşağıya yaz!
-        benim_mail = "abdurrahim.kaya1@gmail.com" 
+        benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
         mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
         
         st.success("Bilgileriniz hazırlandı! Lütfen açılan mail sayfasında 'Gönder'e basarak (varsa uçak biletlerinizi ekleyerek) işlemi tamamlayınız.")
