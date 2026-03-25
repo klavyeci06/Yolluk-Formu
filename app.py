@@ -1,8 +1,3 @@
-Haklısın, kontrol mekanizmasında gözden kaçan detaylar olmuş. Mevcut kodunda if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) > 2): satırı sadece bazı alanları kontrol ediyordu.
-
-Şimdi bu kontrolü, Notlar hariç; Derece, Kademe, Ek Gösterge ve bilet tutarları dahil tüm alanları kapsayacak şekilde genişlettim. Kodun hiçbir yerini (iller, ilçeler, duyurular) asla kısaltmadım. Tamamını tek seferde kopyalayıp yapıştırabilirsin.
-
-Python
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
