@@ -1,10 +1,15 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import urllib.parse
+from streamlit_gsheets import GSheetsConnection  # YENİ EKLENDİ
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
+
+# --- GOOGLE SHEETS BAĞLANTISI ---
+# Senin paylaştığın tablonun linki
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1u4HKa2naq5IndYQQx4ilFsvlxZ_nbSMxaSObUbj3GAs/edit#gid=0"
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 # --- GİRİŞ KONTROLÜ ---
 if "logged_in" not in st.session_state:
@@ -22,11 +27,9 @@ def login_screen():
             else:
                 st.error("Hatalı kullanıcı adı veya şifre!")
 
-# Giriş yapılmadıysa giriş ekranını göster
 if not st.session_state["logged_in"]:
     login_screen()
 else:
-    # --- GİRİŞ YAPILDI - ANA FORM BAŞLIYOR ---
     if st.sidebar.button("Güvenli Çıkış"):
         st.session_state["logged_in"] = False
         st.rerun()
@@ -125,22 +128,18 @@ else:
         ilceler = turkiye_verisi.get(secilen_il, ["Merkez"])
         secilen_ilce = st.selectbox("Görev Yeri (İlçe) *", ilceler)
 
-    st.markdown("---")
     st.subheader("🚌 Seyahat Vasıtası Seçimi")
     col_v1, col_v2 = st.columns(2)
     with col_v1:
         vasita_gidis = st.radio("Gidiş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_gidis")
     with col_v2:
         vasita_donus = st.radio("Dönüş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_donus")
-    st.markdown("---")
 
     with st.form("personel_formu"):
-        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11, placeholder="11 haneli rakam")
-        
+        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11)
         col_ad, col_soyad = st.columns(2)
         with col_ad: ad = st.text_input("Adınız *")
         with col_soyad: soyad = st.text_input("Soyadınız *")
-        
         unvan = st.text_input("Unvanınız *")
         
         c1, c2, c3 = st.columns(3)
@@ -148,82 +147,65 @@ else:
         with c2: kademe = st.text_input("Kademe", max_chars=1)
         with c3: ek_gosterge = st.text_input("Ek Gösterge", max_chars=4)
 
-        st.subheader("📅 Konaklama Bilgileri")
         col_t1, col_t2 = st.columns(2)
-        with col_t1: giris_tarihi = st.date_input("Sosyal Tesise Giriş Tarihi", value=datetime.now())
-        with col_t2: cikis_tarihi = st.date_input("Sosyal Tesisten Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
+        with col_t1: giris_tarihi = st.date_input("Giriş Tarihi", value=datetime.now())
+        with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
         
-        telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
+        telefon = st.text_input("Telefon (10 hane) *", max_chars=10)
+        iban_full = st.text_input("IBAN (TR...) *", value="TR", max_chars=26)
+
+        # Ulaşım masrafları (Sadelik için tek isimde topladım)
+        st.write("💰 Ulaşım Masrafları (TL)")
+        g_u1 = st.number_input("Gidiş: Görev Yeri - Terminal/Havaalanı", min_value=0.0)
+        g_b = st.number_input("Gidiş: Bilet Tutarı *", min_value=0.0)
+        g_u2 = st.number_input("Gidiş: Terminal/Havaalanı - Seminer Yeri", min_value=0.0)
         
-        # --- DÜZELTİLMİŞ IBAN ALANI ---
-        iban_full = st.text_input("Maaş Aldığınız Banka IBAN No (TR ile başlayınız) *", value="TR", max_chars=26)
-
-        st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
-        if vasita_gidis == "Uçak":
-            g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
-            g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
-            g_u2_v = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="g3")
-        else:
-            g_u1_v = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="go1")
-            g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
-            g_u2_v = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="go3")
-
-        st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
-        if vasita_donus == "Uçak":
-            d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
-            d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
-            d_u2_v = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, key="d3")
-        else:
-            d_u1_v = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="do1")
-            d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
-            d_u2_v = st.number_input("Terminal - Görev Yeri Ulaşım (TL)", min_value=0.0, key="do3")
+        d_u1 = st.number_input("Dönüş: Seminer Yeri - Terminal/Havaalanı", min_value=0.0)
+        d_b = st.number_input("Dönüş: Bilet Tutarı *", min_value=0.0)
+        d_u2 = st.number_input("Dönüş: Terminal/Havaalanı - Görev Yeri", min_value=0.0)
 
         notlar = st.text_area("Varsa ek notlar")
-        submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
+        submit_button = st.form_submit_button("Bilgileri Kaydet ve Gönder")
 
     if submit_button:
-        # Validasyon Kontrolleri
-        tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
-        tel_hata = len(telefon) != 10 or not telefon.isdigit()
+        # Validasyonlar
         iban_clean = iban_full.replace(" ", "").upper()
-        iban_hata = not iban_clean.startswith("TR") or len(iban_clean) != 26
-        
-        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) > 2):
-            st.error("Lütfen tüm zorunlu alanları doldurunuz!")
-        elif tc_hata or tel_hata or iban_hata:
-            st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
+        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) == 26):
+            st.error("Lütfen tüm zorunlu alanları (ve IBAN'ı) doğru doldurunuz!")
         else:
-            f_giris = giris_tarihi.strftime("%d.%m.%Y")
-            f_cikis = cikis_tarihi.strftime("%d.%m.%Y")
-            konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
-            
-            govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
-                    f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
-                    f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
-                    f"Telefon: {telefon}\nIBAN: {iban_clean}\n\n" \
-                    f"KONAKLAMA:\n- Giriş: {f_giris}\n- Çıkış: {f_cikis}\n\n" \
-                    f"GİDİŞ ({vasita_gidis}):\n" \
-                    f"- Şehir içi 1: {g_u1_v} TL\n" \
-                    f"- Bilet: {g_b_v} TL\n" \
-                    f"- Şehir içi 2: {g_u2_v} TL\n\n" \
-                    f"DÖNÜŞ ({vasita_donus}):\n" \
-                    f"- Şehir içi 1: {d_u1_v} TL\n" \
-                    f"- Bilet: {d_b_v} TL\n" \
-                    f"- Şehir içi 2: {d_u2_v} TL\n\n" \
-                    f"Notlar: {notlar}"
-            
-            safe_subject = urllib.parse.quote(konu)
-            safe_body = urllib.parse.quote(govde)
-            benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
-            mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
-            
-            st.success("✅ Bilgileriniz hazırlandı!")
-            st.balloons()
+            try:
+                # 1. Mevcut veriyi oku (Tablonun başlıklarını almak için)
+                existing_data = conn.read(spreadsheet=SHEET_URL, worksheet="Sayfa1")
+                
+                # 2. Yeni personelin verilerini bir DataFrame yap (Sütun isimleri Sheets ile AYNI olmalı)
+                new_data = pd.DataFrame([{
+                    "tcno": tc_no,
+                    "ad": ad,
+                    "soyad": soyad,
+                    "unvan": unvan,
+                    "derece": derece,
+                    "kademe": kademe,
+                    "ekgosterge": ek_gosterge,
+                    "giristarihi": giris_tarihi.strftime("%d.%m.%Y"),
+                    "cikistarihi": cikis_tarihi.strftime("%d.%m.%Y"),
+                    "telefon": telefon,
+                    "iban": iban_clean,
+                    "gidisvasita": vasita_gidis,
+                    "donusvasita": vasita_donus,
+                    "gidisulasim1": g_u1,
+                    "gidisbilet": g_b,
+                    "gidisulasim2": g_u2,
+                    "donusulasim1": d_u1,
+                    "donusbilet": d_b,
+                    "donusulasim2": d_u2,
+                    "notlar": notlar
+                }])
 
-            st.markdown(f"""
-                <a href="{mailto_link}" target="_blank" style="text-decoration: none;">
-                    <div style="text-align: center; background-color: #ff4b4b; color: white; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 18px; margin: 20px 0;">
-                        📧 MAİLİ OLUŞTUR VE GÖNDER
-                    </div>
-                </a>
-                """, unsafe_allow_html=True)
+                # 3. Veriyi birleştir ve Google Sheets'e yaz (GÜVENLİK BURADA TAKILMAZ)
+                updated_df = pd.concat([existing_data, new_data], ignore_index=True)
+                conn.update(spreadsheet=SHEET_URL, worksheet="Sayfa1", data=updated_df)
+                
+                st.success("✅ Bilgileriniz başarıyla kaydedildi! Artık sayfayı kapatabilirsiniz.")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Bir hata oluştu: {e}")
