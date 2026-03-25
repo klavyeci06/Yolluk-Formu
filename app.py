@@ -1,10 +1,3 @@
-Görüntüdeki hata mesajı (IndentationError), Python'da bir satırın boşluk seviyesinin (sağa kaydırma miktarı) olması gerekenden farklı olduğunu söylüyor. Büyük ihtimalle else: bloğunun içindeki satırlar arasında kopyalarken bir kayma yaşandı.
-
-Senin için tüm kodu, boşluk hatası (indentation) olmayacak şekilde, IBAN alanı düzeltilmiş ve giriş ekranı eklenmiş haliyle hiçbir satırı atlamadan tek seferde aşağıya ekliyorum.
-
-Not: Bu kodu olduğu gibi kopyalayıp dosyanın tamamıyla değiştirmen yeterli olacaktır.
-
-Python
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
