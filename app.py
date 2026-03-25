@@ -31,6 +31,30 @@ else:
         st.session_state["logged_in"] = False
         st.rerun()
 
+    # --- DİKKAT ÇEKİCİ DUYURU METNİ ---
+    st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 8px solid #ff4b4b; margin-bottom: 25px;">
+            <h3 style="color: #1f1f1f; margin-top: 0;">📢 Değerli Kursiyerimiz,</h3>
+            <p style="font-size: 16px; color: #31333F;">
+                Harcırah ödemenizin sorunsuz ve hızlı bir şekilde gerçekleştirilebilmesi için veri giriş formunu doldururken aşağıdaki hususlara titizlikle dikkat etmeniz gerekmektedir:
+            </p>
+            <ul style="font-size: 15px; color: #31333F;">
+                <li><b>Seyahat Bilgileri:</b> Geliş ve dönüş seyahat şekillerinizi ve harcama tutarlarınızın lira ve kuruş kısımlarını tam ve doğru bir şekilde giriniz. Defterdarlık birimi, tutarsız veya hatalı girişlerde ödeme onayı vermemektedir.</li>
+                <li><b>Zorunlu Alanlar:</b> "Notlar" bölümü haricindeki tüm alanların doldurulması zorunludur. Formdaki bilgiler ödemeye esas teşkil ettiği için eksik bırakılmamalıdır.</li>
+                <li><b>Sorumluluk Beyanı:</b> Forma girilen bilgilerin doğruluğundan doğrudan katılımcı kursiyer sorumludur. Yanlış veya hatalı bilgi girişi sebebiyle oluşabilecek hak kayıplarında sorumluluk tarafınıza aittir.</li>
+                <li><b>E-Posta Gönderimi:</b> Formdaki "Kaydet" butonuna bastıktan sonra aktifleşecek olan "E-Mail Gönder" butonunu kullanarak bildirim yapmanız gerekmektedir. Sistem, alıcı adresini ve içerik metnini otomatik olarak hazırlayacaktır; bu kısımlarda bir değişiklik yapmanıza gerek yoktur.</li>
+            </ul>
+            <div style="background-color: #ffe9e9; padding: 15px; border-radius: 5px; border: 1px dashed #ff4b4b; margin-top: 15px;">
+                <p style="color: #d32f2f; font-weight: bold; font-size: 17px; margin: 0;">
+                    ⚠️ Uçak Bileti/Fatura Eki: Seyahatinizi uçakla gerçekleştirdiyseniz, ilgili e-postanın ekine mutlaka uçak faturalarınızı veya "Fatura yerine geçer" ibaresi bulunan elektronik biletlerinizi mutlaka ekleyiniz.
+                </p>
+            </div>
+            <p style="font-size: 14px; color: #555; margin-top: 15px; font-style: italic;">
+                Gerekli hassasiyeti göstermeniz ödeme süreçlerinizin aksamaması adına önem arz etmektedir.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
     turkiye_verisi = {
         "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
         "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
@@ -110,7 +134,7 @@ else:
         "Tunceli": ["Çemişgezek", "Hozat", "Mazgirt", "Merkez", "Nazımiye", "Ovacık", "Pertek", "Pülümür"],
         "Uşak": ["Banaz", "Eşme", "Karahallı", "Merkez", "Sivaslı", "Ulubey"],
         "Van": ["Bahçesaray", "Başkale", "Çaldıran", "Çatak", "Edremit", "Erciş", "Gevaş", "Gürpınar", "İpekyolu", "Muradiye", "Özalp", "Saray", "Tuşba"],
-        "Yalova": ["Altınova", "Armutlu", "Çiftlikköy", "Çınarcık", "Merkez", "Termal"],
+        "Yalova": ["Altınova", "Armutlu", "Çınarcık", "Merkez", "Termal"],
         "Yozgat": ["Akdağmadeni", "Aydıncık", "Boğazlıyan", "Çandır", "Çayıralan", "Çekerek", "Kadışehri", "Merkez", "Saraykent", "Sarıkaya", "Sorgun", "Şefaatli", "Yenifakılı", "Yerköy"],
         "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
     }
