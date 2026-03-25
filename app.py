@@ -23,27 +23,39 @@ def login_screen():
             else:
                 st.error("Hatalı kullanıcı adı veya şifre!")
 
+# Giriş yapılmadıysa giriş ekranını göster
 if not st.session_state["logged_in"]:
     login_screen()
 else:
+    # --- GİRİŞ YAPILDI - ANA FORM BAŞLIYOR ---
     if st.sidebar.button("Güvenli Çıkış"):
         st.session_state["logged_in"] = False
         st.rerun()
 
-    # --- DUYURU METNİ ---
+    # --- DİKKAT ÇEKİCİ DUYURU METNİ ---
     st.markdown("""
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 8px solid #ff4b4b; margin-bottom: 25px;">
             <h3 style="color: #1f1f1f; margin-top: 0;">📢 Değerli Kursiyerimiz,</h3>
             <p style="font-size: 16px; color: #31333F;">
-                Harcırah ödemenizin sorunsuz yapılabilmesi için lütfen aşağıdaki kurallara dikkat ediniz:
+                Harcırah ödemenizin sorunsuz ve hızlı bir şekilde gerçekleştirilebilmesi için veri giriş formunu doldururken aşağıdaki hususlara titizlikle dikkat etmeniz gerekmektedir:
             </p>
             <ul style="font-size: 15px; color: #31333F;">
-                <li><b>Tutarlar:</b> Geliş-dönüş seyahat tutarlarını <b>kuruşu kuruşuna</b> doğru giriniz.</li>
-                <li><b>Zorunlu Alanlar:</b> Notlar hariç tüm alanların doldurulması zorunludur.</li>
-                <li><b>Mail Gönderimi:</b> Kaydet sonrası açılan butona tıklayarak maili gönderiniz. <b>Uçak faturanızı</b> maile eklemeyi unutmayınız.</li>
+                <li><b>Seyahat Bilgileri:</b> Geliş ve dönüş seyahat şeklinizi, harcama tutarlarınızın lira ve kuruş kısımlarını tam ve doğru bir şekilde giriniz. Defterdarlık birimi, tutarsız veya hatalı girişlerde ödeme onayı vermemektedir.</li>
+                <li><b>Zorunlu Alanlar:</b> "Notlar" bölümü haricindeki tüm alanların doldurulması zorunludur. Formdaki bilgiler ödemeye esas teşkil ettiği için eksik bırakılmamalıdır.</li>
+                <li><b>Sorumluluk Beyanı:</b> Forma girilen bilgilerin doğruluğundan doğrudan katılımcı kursiyer sorumludur. Yanlış veya hatalı bilgi girişi sebebiyle oluşabilecek hak kayıplarında sorumluluk tarafınıza aittir.</li>
+                <li><b>E-Posta Gönderimi:</b> Formdaki "Kaydet" butonuna bastıktan sonra aktifleşecek olan "E-Mail Gönder" butonunu kullanarak bildirim yapmanız gerekmektedir. Sistem, alıcı adresini ve içerik metnini otomatik olarak hazırlayacaktır. Ancak mail ekine UÇUŞ FATURANIZI veya FATURA YERİNE GEÇER İBARELİ ELEKTRONİK BİLETİNİZİ ekleyiniz. E mail ekranında bunun dışında bir değişiklik yapmanıza gerek yoktur.</li>
             </ul>
+            <div style="background-color: #ffe9e9; padding: 15px; border-radius: 5px; border: 1px dashed #ff4b4b; margin-top: 15px;">
+                <p style="color: #d32f2f; font-weight: bold; font-size: 17px; margin: 0;">
+                    ⚠️ Uçak Bileti/Fatura Eki: Seyahatinizi uçakla gerçekleştirdiyseniz, uçak faturalarınızı veya "Fatura yerine geçer" ibaresi bulunan elektronik biletlerinizi ilgili e-postanın ekine mutlaka ekleyiniz.
+                </p>
+            </div>
+            <p style="font-size: 14px; color: #555; margin-top: 15px; font-style: italic;">
+                Gerekli hassasiyeti göstermeniz ödeme süreçlerinizin aksamaması adına önem arz etmektedir.
+            </p>
         </div>
     """, unsafe_allow_html=True)
+
     turkiye_verisi = {
         "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
         "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
@@ -145,16 +157,17 @@ else:
         vasita_gidis = st.radio("Gidiş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_gidis")
     with col_v2:
         vasita_donus = st.radio("Dönüş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_donus")
-    
     st.markdown("---")
 
     with st.form("personel_formu"):
-        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11)
+        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11, placeholder="11 haneli rakam")
+        
         col_ad, col_soyad = st.columns(2)
         with col_ad: ad = st.text_input("Adınız *")
         with col_soyad: soyad = st.text_input("Soyadınız *")
         
         unvan = st.text_input("Unvanınız *")
+        
         c1, c2, c3 = st.columns(3)
         with c1: derece = st.text_input("Derece", max_chars=2)
         with c2: kademe = st.text_input("Kademe", max_chars=1)
@@ -162,72 +175,80 @@ else:
 
         st.subheader("📅 Konaklama Bilgileri")
         col_t1, col_t2 = st.columns(2)
-        with col_t1: giris_tarihi = st.date_input("Giriş Tarihi", value=datetime.now())
-        with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
+        with col_t1: giris_tarihi = st.date_input("Sosyal Tesise Giriş Tarihi", value=datetime.now())
+        with col_t2: cikis_tarihi = st.date_input("Sosyal Tesisten Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
         
-        telefon = st.text_input("Telefon (0 olmadan) *", max_chars=10)
-        iban_full = st.text_input("IBAN (TR ile başlayınız) *", value="TR", max_chars=26)
+        telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
+        
+        # --- DÜZELTİLMİŞ IBAN ALANI ---
+        iban_full = st.text_input("Maaş Aldığınız Banka IBAN No (TR ile başlayınız) *", value="TR", max_chars=26)
 
         st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
-        g_u1_v = st.number_input("Şehir İçi Ulaşım 1 (TL)", min_value=0.0, key="g1")
-        g_b_v = st.number_input("Bilet Tutarı (TL) *", min_value=0.0, key="g2")
-        g_u2_v = st.number_input("Şehir İçi Ulaşım 2 (TL)", min_value=0.0, key="g3")
+        if vasita_gidis == "Uçak":
+            g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
+            g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
+            g_u2_v = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="g3")
+        else:
+            g_u1_v = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="go1")
+            g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
+            g_u2_v = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="go3")
 
         st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
-        d_u1_v = st.number_input("Şehir İçi Ulaşım 1 (TL)", min_value=0.0, key="d1")
-        d_b_v = st.number_input("Bilet Tutarı (TL) *", min_value=0.0, key="d2")
-        d_u2_v = st.number_input("Şehir İçi Ulaşım 2 (TL)", min_value=0.0, key="d3")
+        if vasita_donus == "Uçak":
+            d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
+            d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
+            d_u2_v = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, key="d3")
+        else:
+            d_u1_v = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="do1")
+            d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
+            d_u2_v = st.number_input("Terminal - Görev Yeri Ulaşım (TL)", min_value=0.0, key="do3")
 
         notlar = st.text_area("Varsa ek notlar")
-        submit_button = st.form_submit_button("Bilgileri Hazırla ve Kaydet")
+        submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
 
     if submit_button:
+        # Validasyon Kontrolleri
+        tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
+        tel_hata = len(telefon) != 10 or not telefon.isdigit()
         iban_clean = iban_full.replace(" ", "").upper()
-        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) == 26):
-            st.error("Lütfen zorunlu alanları ve IBAN'ı (26 hane) kontrol ediniz!")
+        iban_hata = not iban_clean.startswith("TR") or len(iban_clean) != 26
+        
+        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) > 2):
+            st.error("Lütfen tüm zorunlu alanları doldurunuz!")
+        elif tc_hata or tel_hata or iban_hata:
+            st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
         else:
             f_giris = giris_tarihi.strftime("%d.%m.%Y")
             f_cikis = cikis_tarihi.strftime("%d.%m.%Y")
             konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
             
-            govde = (f"Sayın Yetkili,\n\n"
-                     f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n"
-                     f"Ek Gösterge: {ek_gosterge} - Derece/Kademe: {derece}/{kademe}\n"
-                     f"Telefon: {telefon}\nIBAN: {iban_clean}\n\n"
-                     f"KONAKLAMA: {f_giris} / {f_cikis}\n\n"
-                     f"GİDİŞ ({vasita_gidis}): {g_u1_v} + {g_b_v} + {g_u2_v} TL\n"
-                     f"DÖNÜŞ ({vasita_donus}): {d_u1_v} + {d_b_v} + {d_u2_v} TL\n\n"
-                     f"Notlar: {notlar}")
-
+            govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
+                    f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
+                    f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
+                    f"Telefon: {telefon}\nIBAN: {iban_clean}\n\n" \
+                    f"KONAKLAMA:\n- Giriş: {f_giris}\n- Çıkış: {f_cikis}\n\n" \
+                    f"GİDİŞ ({vasita_gidis}):\n" \
+                    f"- Şehir içi 1: {g_u1_v} TL\n" \
+                    f"- Bilet: {g_b_v} TL\n" \
+                    f"- Şehir içi 2: {g_u2_v} TL\n\n" \
+                    f"DÖNÜŞ ({vasita_donus}):\n" \
+                    f"- Şehir içi 1: {d_u1_v} TL\n" \
+                    f"- Bilet: {d_b_v} TL\n" \
+                    f"- Şehir içi 2: {d_u2_v} TL\n\n" \
+                    f"Notlar: {notlar}"
+            
             safe_subject = urllib.parse.quote(konu)
             safe_body = urllib.parse.quote(govde)
             benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
             mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
-
-            st.success("✅ Kayıt başarılı! Lütfen aşağıdan mail gönderimini tamamlayın.")
+            
+            st.success("✅ Bilgileriniz hazırlandı!")
             st.balloons()
 
-            # --- İŞTE O ŞIK DOKUNUŞ BURASI ---
-            st.markdown("---")
-            st.subheader("📬 Mail Gönderim Paneli")
-            
-            # 1. Ana Buton (E-posta Linki)
             st.markdown(f"""
                 <a href="{mailto_link}" target="_blank" style="text-decoration: none;">
-                    <div style="text-align: center; background-color: #28a745; color: white; padding: 20px; border-radius: 12px; font-weight: bold; font-size: 20px; border: 2px solid #1e7e34;">
-                        📧 OTOMATİK E-POSTA GÖNDER
+                    <div style="text-align: center; background-color: #ff4b4b; color: white; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 18px; margin: 20px 0;">
+                        📧 MAİLİ OLUŞTUR VE GÖNDER
                     </div>
                 </a>
-                <p style="text-align: center; color: #666; font-size: 13px; margin-top: 5px;">(Butona bastığınızda e-posta uygulamanız açılacaktır)</p>
-            """, unsafe_allow_html=True)
-
-            # 2. Hata Durumunda Manuel Kopyalama Alanı
-            with st.expander("⚠️ E-posta Butonu Çalışmıyor mu? (Tıklayıp Manuel Gönderin)"):
-                st.write(f"**1. Adım:** Alıcı adresini kopyalayın:")
-                st.code(benim_mail)
-                
-                st.write(f"**2. Adım:** Aşağıdaki veri özetini kopyalayıp mail gövdesine yapıştırın:")
-                st.code(govde, language="text")
-                
-                st.info("Unutmayın: Uçakla geldiyseniz bilet/faturanızı mailinize ek yapmayı ihmal etmeyiniz.")
                 """, unsafe_allow_html=True)
