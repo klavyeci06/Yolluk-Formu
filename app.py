@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from streamlit_gsheets import GSheetsConnection  # YENİ EKLENDİ
+from streamlit_gsheets import GSheetsConnection
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
 
 # --- GOOGLE SHEETS BAĞLANTISI ---
-# Senin paylaştığın tablonun linki
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1u4HKa2naq5IndYQQx4ilFsvlxZ_nbSMxaSObUbj3GAs/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -143,41 +142,48 @@ else:
         unvan = st.text_input("Unvanınız *")
         
         c1, c2, c3 = st.columns(3)
-        with c1: derece = st.text_input("Derece", max_chars=2)
-        with c2: kademe = st.text_input("Kademe", max_chars=1)
-        with c3: ek_gosterge = st.text_input("Ek Gösterge", max_chars=4)
+        with c1: derece = st.text_input("Derece *", max_chars=2)
+        with c2: kademe = st.text_input("Kademe *", max_chars=1)
+        with c3: ek_gosterge = st.text_input("Ek Gösterge *", max_chars=4)
 
         col_t1, col_t2 = st.columns(2)
-        with col_t1: giris_tarihi = st.date_input("Giriş Tarihi", value=datetime.now())
-        with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
+        with col_t1: giris_tarihi = st.date_input("Giriş Tarihi *", value=datetime.now())
+        with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi *", value=datetime.now() + timedelta(days=1))
         
         telefon = st.text_input("Telefon (10 hane) *", max_chars=10)
         iban_full = st.text_input("IBAN (TR...) *", value="TR", max_chars=26)
 
-        # Ulaşım masrafları (Sadelik için tek isimde topladım)
-        st.write("💰 Ulaşım Masrafları (TL)")
-        g_u1 = st.number_input("Gidiş: Görev Yeri - Terminal/Havaalanı", min_value=0.0)
+        st.write("💰 Ulaşım Masrafları (TL) *")
+        g_u1 = st.number_input("Gidiş: Görev Yeri - Terminal/Havaalanı *", min_value=0.0)
         g_b = st.number_input("Gidiş: Bilet Tutarı *", min_value=0.0)
-        g_u2 = st.number_input("Gidiş: Terminal/Havaalanı - Seminer Yeri", min_value=0.0)
+        g_u2 = st.number_input("Gidiş: Terminal/Havaalanı - Seminer Yeri *", min_value=0.0)
         
-        d_u1 = st.number_input("Dönüş: Seminer Yeri - Terminal/Havaalanı", min_value=0.0)
+        d_u1 = st.number_input("Dönüş: Seminer Yeri - Terminal/Havaalanı *", min_value=0.0)
         d_b = st.number_input("Dönüş: Bilet Tutarı *", min_value=0.0)
-        d_u2 = st.number_input("Dönüş: Terminal/Havaalanı - Görev Yeri", min_value=0.0)
+        d_u2 = st.number_input("Dönüş: Terminal/Havaalanı - Görev Yeri *", min_value=0.0)
 
-        notlar = st.text_area("Varsa ek notlar")
+        notlar = st.text_area("Varsa ek notlar (İsteğe bağlı)")
         submit_button = st.form_submit_button("Bilgileri Kaydet ve Gönder")
 
     if submit_button:
-        # Validasyonlar
         iban_clean = iban_full.replace(" ", "").upper()
-        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) == 26):
-            st.error("Lütfen tüm zorunlu alanları (ve IBAN'ı) doğru doldurunuz!")
+        
+        # --- ZORUNLU ALAN KONTROLÜ (GÜNCELLENDİ) ---
+        # Metin alanları boş mu? Sayısal alanlar 0 mı?
+        metin_alanlari = [tc_no, ad, soyad, unvan, derece, kademe, ek_gosterge, telefon]
+        sayisal_alanlar = [g_u1, g_b, g_u2, d_u1, d_b, d_u2]
+        
+        bos_metin_var = any(len(x.strip()) == 0 for x in metin_alanlari)
+        sifir_sayisal_var = any(x <= 0.0 for x in sayisal_alanlar)
+
+        if bos_metin_var or sifir_sayisal_var or len(iban_clean) != 26:
+            st.error("⚠️ Notlar hariç tüm alanları doldurmanız zorunludur! Lütfen bilet ve ulaşım tutarlarını kontrol ediniz.")
+        elif len(tc_no) != 11 or not tc_no.isdigit():
+            st.error("⚠️ T.C. Kimlik Numarası 11 haneli ve sadece rakam olmalıdır.")
         else:
             try:
-                # 1. Mevcut veriyi oku (Tablonun başlıklarını almak için)
                 existing_data = conn.read(spreadsheet=SHEET_URL, worksheet="Sayfa1")
                 
-                # 2. Yeni personelin verilerini bir DataFrame yap (Sütun isimleri Sheets ile AYNI olmalı)
                 new_data = pd.DataFrame([{
                     "tcno": tc_no,
                     "ad": ad,
@@ -201,11 +207,12 @@ else:
                     "notlar": notlar
                 }])
 
-                # 3. Veriyi birleştir ve Google Sheets'e yaz (GÜVENLİK BURADA TAKILMAZ)
                 updated_df = pd.concat([existing_data, new_data], ignore_index=True)
                 conn.update(spreadsheet=SHEET_URL, worksheet="Sayfa1", data=updated_df)
                 
-                st.success("✅ Bilgileriniz başarıyla kaydedildi! Artık sayfayı kapatabilirsiniz.")
+                st.success("✅ Tüm bilgiler eksiksiz kaydedildi! İyi yolculuklar.")
                 st.balloons()
+            except Exception as e:
+                st.error(f"Sistemsel bir hata oluştu: {e}")
             except Exception as e:
                 st.error(f"Bir hata oluştu: {e}")
