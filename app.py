@@ -17,7 +17,7 @@ def login_screen():
         user = st.text_input("Kullanıcı Adı")
         pw = st.text_input("Şifre", type="password")
         if st.form_submit_button("Giriş Yap"):
-            if user == "admin" and pw == "12345": # <-- Şifreyi buradan güncelleyebilirsin
+            if user == "akademi" and pw == "diyar21": # <-- Şifreyi buradan güncelleyebilirsin
                 st.session_state["logged_in"] = True
                 st.rerun()
             else:
