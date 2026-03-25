@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -252,3 +251,15 @@ else:
                     </div>
                 </a>
                 """, unsafe_allow_html=True)
+
+            # --- MANUEL YEDEK PANEL BAŞLANGICI ---
+            st.markdown("---")
+            st.warning("⚠️ Yukarıdaki buton çalışmıyor mu?")
+            st.write("E-posta penceresi açılmadıysa lütfen alıcıyı ve aşağıdaki bilgileri kopyalayıp manuel olarak gönderin.")
+            
+            st.write("**Alıcı Adresi:**")
+            st.code(benim_mail)
+            
+            st.write("**Mail İçeriği:**")
+            st.code(govde, language="text")
+            # --- MANUEL YEDEK PANEL BİTİŞİ ---
