@@ -1,14 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from streamlit_gsheets import GSheetsConnection
+import urllib.parse
 
 # Sayfa ayarları
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
-
-# --- GOOGLE SHEETS BAĞLANTISI ---
-# Bağlantıyı Secrets üzerinden kuruyoruz, kodun içinde URL çakışmasını engelledik.
-conn = st.connection("gsheets", type=GSheetsConnection)
 
 # --- GİRİŞ KONTROLÜ ---
 if "logged_in" not in st.session_state:
@@ -26,9 +22,11 @@ def login_screen():
             else:
                 st.error("Hatalı kullanıcı adı veya şifre!")
 
+# Giriş yapılmadıysa giriş ekranını göster
 if not st.session_state["logged_in"]:
     login_screen()
 else:
+    # --- GİRİŞ YAPILDI - ANA FORM BAŞLIYOR ---
     if st.sidebar.button("Güvenli Çıkış"):
         st.session_state["logged_in"] = False
         st.rerun()
@@ -70,7 +68,7 @@ else:
         "Giresun": ["Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", "Görele", "Güce", "Keşap", "Merkez", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıdere"],
         "Gümüşhane": ["Kelkit", "Köse", "Kürtün", "Merkez", "Şiran", "Torul"],
         "Hakkari": ["Çukurca", "Derecik", "Merkez", "Şemdinli", "Yüksekova"],
-        "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladığı"],
+        "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağı"],
         "Iğdır": ["Aralık", "Karakoyunlu", "Merkez", "Tuzluca"],
         "Isparta": ["Aksu", "Atabey", "Eğirdir", "Gelendost", "Gönen", "Keçiborlu", "Merkez", "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli"],
         "İstanbul": ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancattepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
@@ -79,7 +77,7 @@ else:
         "Karabük": ["Eflani", "Eskipazar", "Merkez", "Ovacık", "Safranbolu", "Yenice"],
         "Karaman": ["Ayrancı", "Başyayla", "Ermenek", "Kazımkarabekir", "Merkez", "Sarıveliler"],
         "Kars": ["Akyaka", "Arpaçay", "Digor", "Kağızman", "Merkez", "Sarıkamış", "Selim", "Susuz"],
-        "Kastamonu": ["Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalzeytin", "Daday", "Devrekani", "Doğanyurt", "Hanönü", "İhsangazi", "İneolu", "Küre", "Merkez", "Pınarbaşı", "Seydiler", "Şenpazar", "Taşköprü", "Tosya"],
+        "Kastamonu": ["Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalzeytin", "Daday", "Devrekani", "Doğanyurt", "Hanönü", "İhsangazi", "İnebolu", "Küre", "Merkez", "Pınarbaşı", "Seydiler", "Şenpazar", "Taşköprü", "Tosya"],
         "Kayseri": ["Akkışla", "Bünyan", "Develi", "Felahiye", "Hacılar", "İncesu", "Kocasinan", "Melikgazi", "Özvatan", "Pınarbaşı", "Sarıoğlan", "Sarız", "Talas", "Tomarza", "Yahyalı", "Yeşilhisar"],
         "Kilis": ["Elbeyli", "Merkez", "Musabeyli", "Polateli"],
         "Kırıkkale": ["Bahşılı", "Balışeyh", "Çelebi", "Delice", "Karakeçili", "Keskin", "Merkez", "Sulakyurt", "Yahşihan"],
@@ -127,91 +125,105 @@ else:
         ilceler = turkiye_verisi.get(secilen_il, ["Merkez"])
         secilen_ilce = st.selectbox("Görev Yeri (İlçe) *", ilceler)
 
+    st.markdown("---")
     st.subheader("🚌 Seyahat Vasıtası Seçimi")
     col_v1, col_v2 = st.columns(2)
     with col_v1:
         vasita_gidis = st.radio("Gidiş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_gidis")
     with col_v2:
         vasita_donus = st.radio("Dönüş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_donus")
+    st.markdown("---")
 
     with st.form("personel_formu"):
-        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11)
+        tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11, placeholder="11 haneli rakam")
+        
         col_ad, col_soyad = st.columns(2)
         with col_ad: ad = st.text_input("Adınız *")
         with col_soyad: soyad = st.text_input("Soyadınız *")
+        
         unvan = st.text_input("Unvanınız *")
         
         c1, c2, c3 = st.columns(3)
-        with c1: derece = st.text_input("Derece *", max_chars=2)
-        with c2: kademe = st.text_input("Kademe *", max_chars=1)
-        with c3: ek_gosterge = st.text_input("Ek Gösterge *", max_chars=4)
+        with c1: derece = st.text_input("Derece", max_chars=2)
+        with c2: kademe = st.text_input("Kademe", max_chars=1)
+        with c3: ek_gosterge = st.text_input("Ek Gösterge", max_chars=4)
 
+        st.subheader("📅 Konaklama Bilgileri")
         col_t1, col_t2 = st.columns(2)
-        with col_t1: giris_tarihi = st.date_input("Giriş Tarihi *", value=datetime.now())
-        with col_t2: cikis_tarihi = st.date_input("Ayrılış Tarihi *", value=datetime.now() + timedelta(days=1))
+        with col_t1: giris_tarihi = st.date_input("Sosyal Tesise Giriş Tarihi", value=datetime.now())
+        with col_t2: cikis_tarihi = st.date_input("Sosyal Tesisten Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
         
-        telefon = st.text_input("Telefon (10 hane) *", max_chars=10)
-        iban_full = st.text_input("IBAN (TR...) *", value="TR", max_chars=26)
-
-        st.write("💰 Ulaşım Masrafları (TL) *")
-        g_u1 = st.number_input("Gidiş: Görev Yeri - Terminal/Havaalanı *", min_value=0.0)
-        g_b = st.number_input("Gidiş: Bilet Tutarı *", min_value=0.0)
-        g_u2 = st.number_input("Gidiş: Terminal/Havaalanı - Seminer Yeri *", min_value=0.0)
+        telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
         
-        d_u1 = st.number_input("Dönüş: Seminer Yeri - Terminal/Havaalanı *", min_value=0.0)
-        d_b = st.number_input("Dönüş: Bilet Tutarı *", min_value=0.0)
-        d_u2 = st.number_input("Dönüş: Terminal/Havaalanı - Görev Yeri *", min_value=0.0)
+        # --- DÜZELTİLMİŞ IBAN ALANI ---
+        iban_full = st.text_input("Maaş Aldığınız Banka IBAN No (TR ile başlayınız) *", value="TR", max_chars=26)
 
-        notlar_input = st.text_area("Varsa ek notlar (İsteğe bağlı)")
-        submit_button = st.form_submit_button("Bilgileri Kaydet ve Gönder")
+        st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
+        if vasita_gidis == "Uçak":
+            g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
+            g_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="g2")
+            g_u2_v = st.number_input("Havaalanı - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="g3")
+        else:
+            g_u1_v = st.number_input("Görev Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="go1")
+            g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
+            g_u2_v = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="go3")
+
+        st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
+        if vasita_donus == "Uçak":
+            d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
+            d_b_v = st.number_input("Uçak Bileti Tutarı (TL) *", min_value=0.0, key="d2")
+            d_u2_v = st.number_input("Havaalanı - Görev Yeri Ulaşım (TL)", min_value=0.0, key="d3")
+        else:
+            d_u1_v = st.number_input("Seminer Yeri - Terminal Ulaşım (TL)", min_value=0.0, key="do1")
+            d_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="do2")
+            d_u2_v = st.number_input("Terminal - Görev Yeri Ulaşım (TL)", min_value=0.0, key="do3")
+
+        notlar = st.text_area("Varsa ek notlar")
+        submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
 
     if submit_button:
+        # Validasyon Kontrolleri
+        tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
+        tel_hata = len(telefon) != 10 or not telefon.isdigit()
         iban_clean = iban_full.replace(" ", "").upper()
+        iban_hata = not iban_clean.startswith("TR") or len(iban_clean) != 26
         
-        metin_alanlari = [tc_no, ad, soyad, unvan, derece, kademe, ek_gosterge, telefon]
-        sayisal_alanlar = [g_u1, g_b, g_u2, d_u1, d_b, d_u2]
-        
-        bos_metin_var = any(len(x.strip()) == 0 for x in metin_alanlari)
-        sifir_sayisal_var = any(x <= 0.0 for x in sayisal_alanlar)
-
-        if bos_metin_var or sifir_sayisal_var or len(iban_clean) != 26:
-            st.error("⚠️ Notlar hariç tüm alanları doldurmanız zorunludur! Lütfen bilet ve ulaşım tutarlarını kontrol ediniz.")
-        elif len(tc_no) != 11 or not tc_no.isdigit():
-            st.error("⚠️ T.C. Kimlik Numarası 11 haneli ve sadece rakam olmalıdır.")
+        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) > 2):
+            st.error("Lütfen tüm zorunlu alanları doldurunuz!")
+        elif tc_hata or tel_hata or iban_hata:
+            st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
         else:
-            try:
-                # OKUMA: worksheet ismini "Sayfa1" olarak sabit tutuyoruz.
-                existing_data = conn.read(worksheet="Sayfa1")
-                
-                # YENİ VERİ: Sütun isimleri senin attığın listeyle %100 uyumlu.
-                new_data = pd.DataFrame([{
-                    "tcno": tc_no,
-                    "ad": ad,
-                    "soyad": soyad,
-                    "unvan": unvan,
-                    "derece": derece,
-                    "kademe": kademe,
-                    "ekgosterge": ek_gosterge,
-                    "giristarihi": giris_tarihi.strftime("%d.%m.%Y"),
-                    "cikistarihi": cikis_tarihi.strftime("%d.%m.%Y"),
-                    "telefon": telefon,
-                    "iban": iban_clean,
-                    "gidisvasita": vasita_gidis,
-                    "donusvasita": vasita_donus,
-                    "gidisulasim1": g_u1,
-                    "gidisbilet": g_b,
-                    "gidisulasim2": g_u2,
-                    "donusulasim1": d_u1,
-                    "donusbilet": d_b,
-                    "donusulasim2": d_u2,
-                    "notlar": notlar_input
-                }])
+            f_giris = giris_tarihi.strftime("%d.%m.%Y")
+            f_cikis = cikis_tarihi.strftime("%d.%m.%Y")
+            konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
+            
+            govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
+                    f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
+                    f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
+                    f"Telefon: {telefon}\nIBAN: {iban_clean}\n\n" \
+                    f"KONAKLAMA:\n- Giriş: {f_giris}\n- Çıkış: {f_cikis}\n\n" \
+                    f"GİDİŞ ({vasita_gidis}):\n" \
+                    f"- Şehir içi 1: {g_u1_v} TL\n" \
+                    f"- Bilet: {g_b_v} TL\n" \
+                    f"- Şehir içi 2: {g_u2_v} TL\n\n" \
+                    f"DÖNÜŞ ({vasita_donus}):\n" \
+                    f"- Şehir içi 1: {d_u1_v} TL\n" \
+                    f"- Bilet: {d_b_v} TL\n" \
+                    f"- Şehir içi 2: {d_u2_v} TL\n\n" \
+                    f"Notlar: {notlar}"
+            
+            safe_subject = urllib.parse.quote(konu)
+            safe_body = urllib.parse.quote(govde)
+            benim_mail = "abdurrahim.kaya1@diyanet.gov.tr" 
+            mailto_link = f"mailto:{benim_mail}?subject={safe_subject}&body={safe_body}"
+            
+            st.success("✅ Bilgileriniz hazırlandı!")
+            st.balloons()
 
-                # BİRLEŞTİRME VE GÜNCELLEME
-                updated_df = pd.concat([existing_data, new_data], ignore_index=True)
-                conn.update(worksheet="Sayfa1", data=updated_df)
-                
-                st.success("✅ Tüm bilgiler eksiksiz kaydedildi! İyi yolculuklar.")
-                st.balloons()
-            except Exception as e:
-                st.error(f"Sistemsel bir hata oluştu: {e}")
+            st.markdown(f"""
+                <a href="{mailto_link}" target="_blank" style="text-decoration: none;">
+                    <div style="text-align: center; background-color: #ff4b4b; color: white; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 18px; margin: 20px 0;">
+                        📧 MAİLİ OLUŞTUR VE GÖNDER
+                    </div>
+                </a>
+                """, unsafe_allow_html=True)
