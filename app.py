@@ -39,14 +39,14 @@ else:
                 Harcırah ödemenizin sorunsuz ve hızlı bir şekilde gerçekleştirilebilmesi için veri giriş formunu doldururken aşağıdaki hususlara titizlikle dikkat etmeniz gerekmektedir:
             </p>
             <ul style="font-size: 15px; color: #31333F;">
-                <li><b>Seyahat Bilgileri:</b> Geliş ve dönüş seyahat şekillerinizi ve harcama tutarlarınızın lira ve kuruş kısımlarını tam ve doğru bir şekilde giriniz. Defterdarlık birimi, tutarsız veya hatalı girişlerde ödeme onayı vermemektedir.</li>
+                <li><b>Seyahat Bilgileri:</b> Geliş ve dönüş seyahat şeklinizi, harcama tutarlarınızın lira ve kuruş kısımlarını tam ve doğru bir şekilde giriniz. Defterdarlık birimi, tutarsız veya hatalı girişlerde ödeme onayı vermemektedir.</li>
                 <li><b>Zorunlu Alanlar:</b> "Notlar" bölümü haricindeki tüm alanların doldurulması zorunludur. Formdaki bilgiler ödemeye esas teşkil ettiği için eksik bırakılmamalıdır.</li>
                 <li><b>Sorumluluk Beyanı:</b> Forma girilen bilgilerin doğruluğundan doğrudan katılımcı kursiyer sorumludur. Yanlış veya hatalı bilgi girişi sebebiyle oluşabilecek hak kayıplarında sorumluluk tarafınıza aittir.</li>
-                <li><b>E-Posta Gönderimi:</b> Formdaki "Kaydet" butonuna bastıktan sonra aktifleşecek olan "E-Mail Gönder" butonunu kullanarak bildirim yapmanız gerekmektedir. Sistem, alıcı adresini ve içerik metnini otomatik olarak hazırlayacaktır; bu kısımlarda bir değişiklik yapmanıza gerek yoktur.</li>
+                <li><b>E-Posta Gönderimi:</b> Formdaki "Kaydet" butonuna bastıktan sonra aktifleşecek olan "E-Mail Gönder" butonunu kullanarak bildirim yapmanız gerekmektedir. Sistem, alıcı adresini ve içerik metnini otomatik olarak hazırlayacaktır. Ancak mail ekine UÇUŞ FATURANIZI veya FATURA YERİNE GEÇER İBARELİ ELEKTRONİK BİLETİNİZİ ekleyiniz. E mail ekranında bunun dışında bir değişiklik yapmanıza gerek yoktur.</li>
             </ul>
             <div style="background-color: #ffe9e9; padding: 15px; border-radius: 5px; border: 1px dashed #ff4b4b; margin-top: 15px;">
                 <p style="color: #d32f2f; font-weight: bold; font-size: 17px; margin: 0;">
-                    ⚠️ Uçak Bileti/Fatura Eki: Seyahatinizi uçakla gerçekleştirdiyseniz, ilgili e-postanın ekine mutlaka uçak faturalarınızı veya "Fatura yerine geçer" ibaresi bulunan elektronik biletlerinizi mutlaka ekleyiniz.
+                    ⚠️ Uçak Bileti/Fatura Eki: Seyahatinizi uçakla gerçekleştirdiyseniz, uçak faturalarınızı veya "Fatura yerine geçer" ibaresi bulunan elektronik biletlerinizi ilgili e-postanın ekine mutlaka ekleyiniz.
                 </p>
             </div>
             <p style="font-size: 14px; color: #555; margin-top: 15px; font-style: italic;">
