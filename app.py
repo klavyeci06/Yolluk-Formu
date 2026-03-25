@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import webbrowser
 import urllib.parse
 
 # Sayfa ayarları
@@ -17,18 +16,17 @@ def login_screen():
         user = st.text_input("Kullanıcı Adı")
         pw = st.text_input("Şifre", type="password")
         if st.form_submit_button("Giriş Yap"):
-            if user == "akademi" and pw == "diyar21": # <-- Şifreyi buradan güncelleyebilirsin
+            if user == "admin" and pw == "12345": # <-- Şifreyi buradan değiştirebilirsiniz
                 st.session_state["logged_in"] = True
                 st.rerun()
             else:
                 st.error("Hatalı kullanıcı adı veya şifre!")
 
-# Eğer giriş yapılmadıysa giriş ekranını göster
+# Giriş yapılmadıysa giriş ekranını göster
 if not st.session_state["logged_in"]:
     login_screen()
 else:
-    # --- GİRİŞ YAPILDIYSA ANA FORM BAŞLAR ---
-    # Çıkış butonu (Opsiyonel)
+    # --- GİRİŞ YAPILDI - ANA FORM BAŞLIYOR ---
     if st.sidebar.button("Güvenli Çıkış"):
         st.session_state["logged_in"] = False
         st.rerun()
@@ -118,9 +116,8 @@ else:
         "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
     }
 
-    st.title("🏦 Personel Kayıt ve Yolluk Formu")
+   st.title("🏦 Personel Kayıt ve Yolluk Formu")
 
-    # --- 1. DİNAMİK SEÇİMLER ---
     col_loc1, col_loc2 = st.columns(2)
     with col_loc1:
         iller = sorted(list(turkiye_verisi.keys()))
@@ -138,7 +135,6 @@ else:
         vasita_donus = st.radio("Dönüş Vasıtası *", ["Uçak", "Otobüs"], horizontal=True, key="v_donus")
     st.markdown("---")
 
-    # --- 2. ANA FORM ---
     with st.form("personel_formu"):
         tc_no = st.text_input("T.C. Kimlik Numarası *", max_chars=11, placeholder="11 haneli rakam")
         
@@ -159,12 +155,11 @@ else:
         with col_t2: cikis_tarihi = st.date_input("Sosyal Tesisten Ayrılış Tarihi", value=datetime.now() + timedelta(days=1))
         
         telefon = st.text_input("Telefon (Başında 0 olmadan, 10 hane) *", max_chars=10, placeholder="5xxxxxxxxx")
-        st.write("Maaş Aldığınız Banka IBAN No")
-        c_tr, c_iban = st.columns([1, 8])
-        with c_tr: st.code("TR", language="text")
-        with c_iban: iban_govde = st.text_input("IBAN (24 hane rakam) *", max_chars=24)
+        
+        # --- DÜZELTİLMİŞ IBAN ALANI ---
+        # "TR" ibaresi kutunun içinde ön değer olarak durur, kullanıcı devamına yazar.
+        iban_full = st.text_input("Maaş Aldığınız Banka IBAN No (TR ile başlayınız) *", value="TR", max_chars=26, help="TR yazısını silmeden 24 hane rakam ekleyiniz.")
 
-        # --- GİDİŞ HARCAMALARI ---
         st.subheader(f"➡️ GİDİŞ: {vasita_gidis}")
         if vasita_gidis == "Uçak":
             g_u1_v = st.number_input("Görev Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="g1")
@@ -175,7 +170,6 @@ else:
             g_b_v = st.number_input("Otobüs Bileti Tutarı (TL) *", min_value=0.0, key="go2")
             g_u2_v = st.number_input("Terminal - Seminer Yeri Ulaşım (TL)", min_value=0.0, key="go3")
 
-        # --- DÖNÜŞ HARCAMALARI ---
         st.subheader(f"⬅️ DÖNÜŞ: {vasita_donus}")
         if vasita_donus == "Uçak":
             d_u1_v = st.number_input("Seminer Yeri - Havaalanı Ulaşım (TL)", min_value=0.0, key="d1")
@@ -189,35 +183,37 @@ else:
         notlar = st.text_area("Varsa ek notlar")
         submit_button = st.form_submit_button("Bilgileri Hazırla ve Mail Gönder")
 
-    # --- 3. KONTROLLER VE MAIL ---
     if submit_button:
+        # Validasyon Kontrolleri
         tc_hata = len(tc_no) != 11 or not tc_no.isdigit()
         tel_hata = len(telefon) != 10 or not telefon.isdigit()
-        iban_hata = len(iban_govde) != 24 or not iban_govde.isdigit()
         
-        if not (tc_no and ad and soyad and unvan and telefon and iban_govde):
+        # IBAN Kontrolü: TR ile başlamalı ve toplam 26 karakter olmalı (TR + 24 rakam)
+        iban_clean = iban_full.replace(" ", "").upper()
+        iban_hata = not iban_clean.startswith("TR") or len(iban_clean) != 26
+        
+        if not (tc_no and ad and soyad and unvan and telefon and len(iban_clean) > 2):
             st.error("Lütfen tüm zorunlu alanları doldurunuz!")
         elif tc_hata or tel_hata or iban_hata:
-            st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz!")
+            st.warning("Girdiğiniz bilgileri (TC, Tel, IBAN) lütfen kontrol ediniz! IBAN 'TR' ile başlamalı ve toplam 26 haneli olmalıdır.")
         else:
             f_giris = giris_tarihi.strftime("%d.%m.%Y")
             f_cikis = cikis_tarihi.strftime("%d.%m.%Y")
-            
             konu = f"Yolluk Formu - {ad} {soyad} ({tc_no})"
             
             govde = f"Sayın Yetkili,\n\nYolluk bilgilerim aşağıdadır:\n\n" \
                     f"TC: {tc_no}\nAd Soyad: {ad} {soyad}\nUnvan: {unvan}\n" \
                     f"Ek Gösterge: {ek_gosterge}\nDerece/Kademe: {derece}/{kademe}\n" \
-                    f"Telefon: {telefon}\nIBAN: TR{iban_govde}\n\n" \
+                    f"Telefon: {telefon}\nIBAN: {iban_clean}\n\n" \
                     f"KONAKLAMA:\n- Giriş: {f_giris}\n- Çıkış: {f_cikis}\n\n" \
                     f"GİDİŞ ({vasita_gidis}):\n" \
-                    f"- ***Şehir içi 1:*** {g_u1_v} TL\n" \
+                    f"- Şehir içi 1: {g_u1_v} TL\n" \
                     f"- Bilet: {g_b_v} TL\n" \
-                    f"- ***Şehir içi 2:*** {g_u2_v} TL\n\n" \
+                    f"- Şehir içi 2: {g_u2_v} TL\n\n" \
                     f"DÖNÜŞ ({vasita_donus}):\n" \
-                    f"- ***Şehir içi 1:*** {d_u1_v} TL\n" \
+                    f"- Şehir içi 1: {d_u1_v} TL\n" \
                     f"- Bilet: {d_b_v} TL\n" \
-                    f"- ***Şehir içi 2:*** {d_u2_v} TL\n\n" \
+                    f"- Şehir içi 2: {d_u2_v} TL\n\n" \
                     f"Notlar: {notlar}"
             
             safe_subject = urllib.parse.quote(konu)
@@ -236,6 +232,5 @@ else:
                 </a>
                 """, unsafe_allow_html=True)
 
-            with st.expander("Görünümü kontrol etmek veya manuel kopyalamak için tıklayın:"):
-                st.text_area("Mail İçeriği Önizleme:", value=govde, height=350)
-                st.write(f"Alıcı: **{benim_mail}**")
+            with st.expander("Önizleme ve Manuel Kopyalama"):
+                st.text_area("Mail İçeriği:", value=govde, height=350)
