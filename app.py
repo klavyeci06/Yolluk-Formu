@@ -7,7 +7,7 @@ from streamlit_gsheets import GSheetsConnection
 st.set_page_config(page_title="Personel Bilgi Sistemi", page_icon="🏦", layout="centered")
 
 # --- GOOGLE SHEETS BAĞLANTISI ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1u4HKa2naq5IndYQQx4ilFsvlxZ_nbSMxaSObUbj3GAs/edit#gid=0"
+# Bağlantıyı Secrets üzerinden kuruyoruz, kodun içinde URL çakışmasını engelledik.
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # --- GİRİŞ KONTROLÜ ---
@@ -70,7 +70,7 @@ else:
         "Giresun": ["Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", "Görele", "Güce", "Keşap", "Merkez", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıdere"],
         "Gümüşhane": ["Kelkit", "Köse", "Kürtün", "Merkez", "Şiran", "Torul"],
         "Hakkari": ["Çukurca", "Derecik", "Merkez", "Şemdinli", "Yüksekova"],
-        "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağı"],
+        "Hatay": ["Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladığı"],
         "Iğdır": ["Aralık", "Karakoyunlu", "Merkez", "Tuzluca"],
         "Isparta": ["Aksu", "Atabey", "Eğirdir", "Gelendost", "Gönen", "Keçiborlu", "Merkez", "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli"],
         "İstanbul": ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancattepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
@@ -79,7 +79,7 @@ else:
         "Karabük": ["Eflani", "Eskipazar", "Merkez", "Ovacık", "Safranbolu", "Yenice"],
         "Karaman": ["Ayrancı", "Başyayla", "Ermenek", "Kazımkarabekir", "Merkez", "Sarıveliler"],
         "Kars": ["Akyaka", "Arpaçay", "Digor", "Kağızman", "Merkez", "Sarıkamış", "Selim", "Susuz"],
-        "Kastamonu": ["Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalzeytin", "Daday", "Devrekani", "Doğanyurt", "Hanönü", "İhsangazi", "İnebolu", "Küre", "Merkez", "Pınarbaşı", "Seydiler", "Şenpazar", "Taşköprü", "Tosya"],
+        "Kastamonu": ["Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalzeytin", "Daday", "Devrekani", "Doğanyurt", "Hanönü", "İhsangazi", "İneolu", "Küre", "Merkez", "Pınarbaşı", "Seydiler", "Şenpazar", "Taşköprü", "Tosya"],
         "Kayseri": ["Akkışla", "Bünyan", "Develi", "Felahiye", "Hacılar", "İncesu", "Kocasinan", "Melikgazi", "Özvatan", "Pınarbaşı", "Sarıoğlan", "Sarız", "Talas", "Tomarza", "Yahyalı", "Yeşilhisar"],
         "Kilis": ["Elbeyli", "Merkez", "Musabeyli", "Polateli"],
         "Kırıkkale": ["Bahşılı", "Balışeyh", "Çelebi", "Delice", "Karakeçili", "Keskin", "Merkez", "Sulakyurt", "Yahşihan"],
@@ -162,14 +162,12 @@ else:
         d_b = st.number_input("Dönüş: Bilet Tutarı *", min_value=0.0)
         d_u2 = st.number_input("Dönüş: Terminal/Havaalanı - Görev Yeri *", min_value=0.0)
 
-        notlar = st.text_area("Varsa ek notlar (İsteğe bağlı)")
+        notlar_input = st.text_area("Varsa ek notlar (İsteğe bağlı)")
         submit_button = st.form_submit_button("Bilgileri Kaydet ve Gönder")
 
     if submit_button:
         iban_clean = iban_full.replace(" ", "").upper()
         
-        # --- ZORUNLU ALAN KONTROLÜ (GÜNCELLENDİ) ---
-        # Metin alanları boş mu? Sayısal alanlar 0 mı?
         metin_alanlari = [tc_no, ad, soyad, unvan, derece, kademe, ek_gosterge, telefon]
         sayisal_alanlar = [g_u1, g_b, g_u2, d_u1, d_b, d_u2]
         
@@ -182,8 +180,10 @@ else:
             st.error("⚠️ T.C. Kimlik Numarası 11 haneli ve sadece rakam olmalıdır.")
         else:
             try:
-                existing_data = conn.read(spreadsheet=SHEET_URL, worksheet="Sayfa1")
+                # OKUMA: worksheet ismini "Sayfa1" olarak sabit tutuyoruz.
+                existing_data = conn.read(worksheet="Sayfa1")
                 
+                # YENİ VERİ: Sütun isimleri senin attığın listeyle %100 uyumlu.
                 new_data = pd.DataFrame([{
                     "tcno": tc_no,
                     "ad": ad,
@@ -204,15 +204,14 @@ else:
                     "donusulasim1": d_u1,
                     "donusbilet": d_b,
                     "donusulasim2": d_u2,
-                    "notlar": notlar
+                    "notlar": notlar_input
                 }])
 
+                # BİRLEŞTİRME VE GÜNCELLEME
                 updated_df = pd.concat([existing_data, new_data], ignore_index=True)
-                conn.update(spreadsheet=SHEET_URL, worksheet="Sayfa1", data=updated_df)
+                conn.update(worksheet="Sayfa1", data=updated_df)
                 
                 st.success("✅ Tüm bilgiler eksiksiz kaydedildi! İyi yolculuklar.")
                 st.balloons()
             except Exception as e:
                 st.error(f"Sistemsel bir hata oluştu: {e}")
-            except Exception as e:
-                st.error(f"Bir hata oluştu: {e}")
